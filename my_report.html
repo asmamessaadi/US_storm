@@ -1,0 +1,46 @@
+<h1 id="introduction">Introduction</h1>
+<p>Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern. This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage. Data : the data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site: Storm Data [47Mb] There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined. National Weather Service Storm Data Documentation National Climatic Data Center Storm Events FAQ The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More r&gt; storm_data &lt;- read.csv(&quot;repdata_data_StormData.csv&quot;, sep=&quot;,&quot;, header=T)ecent years should be considered more complete. ##Data Processing</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">storm_data &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;repdata_data_StormData.csv&quot;</span>, <span class="dt">sep=</span><span class="st">&quot;,&quot;</span>, <span class="dt">header=</span>T)
+tidy_data &lt;-<span class="st"> </span>storm_data[,<span class="kw">c</span>(<span class="st">&#39;EVTYPE&#39;</span>,<span class="st">&#39;FATALITIES&#39;</span>,<span class="st">&#39;INJURIES&#39;</span>, <span class="st">&#39;PROPDMG&#39;</span>, <span class="st">&#39;PROPDMGEXP&#39;</span>, <span class="st">&#39;CROPDMG&#39;</span>, <span class="st">&#39;CROPDMGEXP&#39;</span>)]
+<span class="co"># Convert H, K, M, B units to calculate Property Damage </span>
+tidy_data$PROPDMGNUM =<span class="st"> </span><span class="dv">0</span>
+tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;H&quot;</span>, ]$PROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;H&quot;</span>, ]$PROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">2</span>
+tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;K&quot;</span>, ]$PROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;K&quot;</span>, ]$PROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">3</span>
+tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;M&quot;</span>, ]$PROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;M&quot;</span>, ]$PROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">6</span>
+tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;B&quot;</span>, ]$PROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$PROPDMGEXP ==<span class="st"> &quot;B&quot;</span>, ]$PROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">9</span>
+
+<span class="co"># Convert H, K, M, B units to calculate Crop Damage</span>
+tidy_data$CROPDMGNUM =<span class="st"> </span><span class="dv">0</span>
+tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;H&quot;</span>, ]$CROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;H&quot;</span>, ]$CROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">2</span>
+tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;K&quot;</span>, ]$CROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;K&quot;</span>, ]$CROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">3</span>
+tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;M&quot;</span>, ]$CROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;M&quot;</span>, ]$CROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">6</span>
+tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;B&quot;</span>, ]$CROPDMGNUM =<span class="st"> </span>tidy_data[tidy_data$CROPDMGEXP ==<span class="st"> &quot;B&quot;</span>, ]$CROPDMG *<span class="st"> </span><span class="dv">10</span>^<span class="dv">9</span></code></pre></div>
+<h1 id="results">Results</h1>
+<p>Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health ?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2)
+fatalities &lt;-<span class="st"> </span><span class="kw">aggregate</span>(FATALITIES ~<span class="st"> </span>EVTYPE, <span class="dt">data=</span>tidy_data, sum)
+fatalities &lt;-<span class="st"> </span>fatalities[<span class="kw">order</span>(-fatalities$FATALITIES), ][<span class="dv">1</span>:<span class="dv">10</span>, ]
+fatalities$EVTYPE &lt;-<span class="st"> </span><span class="kw">factor</span>(fatalities$EVTYPE, <span class="dt">levels =</span> fatalities$EVTYPE)
+
+<span class="kw">ggplot</span>(fatalities, <span class="kw">aes</span>(<span class="dt">x =</span> EVTYPE, <span class="dt">y =</span> FATALITIES)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;blue&quot;</span>, <span class="dt">las =</span> <span class="dv">3</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Fatalities&quot;</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of fatalities by top 10 Weather Events&quot;</span>)</code></pre></div>
+<pre><code>## Warning: Ignoring unknown parameters: las</code></pre>
+<div class="figure">
+<img src="figure/unnamed-chunk-2-1.png" alt="plot of chunk unnamed-chunk-2" />
+<p class="caption">plot of chunk unnamed-chunk-2</p>
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">injuries &lt;-<span class="st"> </span><span class="kw">aggregate</span>(INJURIES ~<span class="st"> </span>EVTYPE, <span class="dt">data=</span>tidy_data, sum)
+injuries &lt;-<span class="st"> </span>injuries[<span class="kw">order</span>(-injuries$INJURIES), ][<span class="dv">1</span>:<span class="dv">10</span>, ]
+injuries$EVTYPE &lt;-<span class="st"> </span><span class="kw">factor</span>(injuries$EVTYPE, <span class="dt">levels =</span> injuries$EVTYPE)
+
+<span class="kw">ggplot</span>(injuries, <span class="kw">aes</span>(<span class="dt">x =</span> EVTYPE, <span class="dt">y =</span> INJURIES)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_bar</span>(<span class="dt">stat =</span> <span class="st">&quot;identity&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;blue&quot;</span>, <span class="dt">las =</span> <span class="dv">3</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">hjust =</span> <span class="dv">1</span>)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Event Type&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Injuries&quot;</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of injuries by top 10 Weather Events&quot;</span>)</code></pre></div>
+<pre><code>## Warning: Ignoring unknown parameters: las</code></pre>
+<div class="figure">
+<img src="figure/unnamed-chunk-2-2.png" alt="plot of chunk unnamed-chunk-2" />
+<p class="caption">plot of chunk unnamed-chunk-2</p>
+</div>

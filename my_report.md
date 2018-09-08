@@ -1,0 +1,67 @@
+#Introduction
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+Data :
+the data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
+Storm Data [47Mb]
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
+National Weather Service Storm Data Documentation
+National Climatic Data Center Storm Events FAQ
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More r> storm_data <- read.csv("repdata_data_StormData.csv", sep=",", header=T)ecent years should be considered more complete.
+##Data Processing
+
+```r
+storm_data <- read.csv("repdata_data_StormData.csv", sep=",", header=T)
+tidy_data <- storm_data[,c('EVTYPE','FATALITIES','INJURIES', 'PROPDMG', 'PROPDMGEXP', 'CROPDMG', 'CROPDMGEXP')]
+# Convert H, K, M, B units to calculate Property Damage 
+tidy_data$PROPDMGNUM = 0
+tidy_data[tidy_data$PROPDMGEXP == "H", ]$PROPDMGNUM = tidy_data[tidy_data$PROPDMGEXP == "H", ]$PROPDMG * 10^2
+tidy_data[tidy_data$PROPDMGEXP == "K", ]$PROPDMGNUM = tidy_data[tidy_data$PROPDMGEXP == "K", ]$PROPDMG * 10^3
+tidy_data[tidy_data$PROPDMGEXP == "M", ]$PROPDMGNUM = tidy_data[tidy_data$PROPDMGEXP == "M", ]$PROPDMG * 10^6
+tidy_data[tidy_data$PROPDMGEXP == "B", ]$PROPDMGNUM = tidy_data[tidy_data$PROPDMGEXP == "B", ]$PROPDMG * 10^9
+
+# Convert H, K, M, B units to calculate Crop Damage
+tidy_data$CROPDMGNUM = 0
+tidy_data[tidy_data$CROPDMGEXP == "H", ]$CROPDMGNUM = tidy_data[tidy_data$CROPDMGEXP == "H", ]$CROPDMG * 10^2
+tidy_data[tidy_data$CROPDMGEXP == "K", ]$CROPDMGNUM = tidy_data[tidy_data$CROPDMGEXP == "K", ]$CROPDMG * 10^3
+tidy_data[tidy_data$CROPDMGEXP == "M", ]$CROPDMGNUM = tidy_data[tidy_data$CROPDMGEXP == "M", ]$CROPDMG * 10^6
+tidy_data[tidy_data$CROPDMGEXP == "B", ]$CROPDMGNUM = tidy_data[tidy_data$CROPDMGEXP == "B", ]$CROPDMG * 10^9
+```
+#Results
+Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health ?
+
+```r
+library(ggplot2)
+fatalities <- aggregate(FATALITIES ~ EVTYPE, data=tidy_data, sum)
+fatalities <- fatalities[order(-fatalities$FATALITIES), ][1:10, ]
+fatalities$EVTYPE <- factor(fatalities$EVTYPE, levels = fatalities$EVTYPE)
+
+ggplot(fatalities, aes(x = EVTYPE, y = FATALITIES)) + 
+    geom_bar(stat = "identity", fill = "blue", las = 3) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    xlab("Event Type") + ylab("Fatalities") + ggtitle("Number of fatalities by top 10 Weather Events")
+```
+
+```
+## Warning: Ignoring unknown parameters: las
+```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png)
+
+```r
+injuries <- aggregate(INJURIES ~ EVTYPE, data=tidy_data, sum)
+injuries <- injuries[order(-injuries$INJURIES), ][1:10, ]
+injuries$EVTYPE <- factor(injuries$EVTYPE, levels = injuries$EVTYPE)
+
+ggplot(injuries, aes(x = EVTYPE, y = INJURIES)) + 
+    geom_bar(stat = "identity", fill = "blue", las = 3) + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    xlab("Event Type") + ylab("Injuries") + ggtitle("Number of injuries by top 10 Weather Events")
+```
+
+```
+## Warning: Ignoring unknown parameters: las
+```
+
+![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-2.png)
+
